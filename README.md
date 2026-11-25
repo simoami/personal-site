@@ -8,7 +8,9 @@ pnpm dev
 pnpm build
 ```
 
-Set `SITE_URL` to the site's public origin at build time for canonical URLs, the sitemap and RSS. The default is `https://example.com`.
+## Deployment
+
+The site is static and requires no custom environment variables on Vercel. The build uses Vercel's production domain when available and `http://localhost:3000` otherwise. Set the optional `SITE_URL` to override the origin used in canonical URLs, the sitemap and RSS.
 
 ## Content
 

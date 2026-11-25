@@ -143,6 +143,12 @@ h3 {
   padding: 12px;
 }
 
+@media (max-width: 420px) {
+  .primary-nav a {
+    padding-inline: 6px;
+  }
+}
+
 .theme-toggle {
   display: grid;
   place-items: center;

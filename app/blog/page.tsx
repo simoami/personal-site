@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { PostList } from '#components/PostList';
+import { PostList } from '#components/post-list';
 import { getPosts } from '#lib/content';
 import { BLOG_DESCRIPTION } from '#lib/site';
 

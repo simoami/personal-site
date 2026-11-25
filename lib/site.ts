@@ -10,9 +10,16 @@ export const BLOG_DESCRIPTION = 'Notes on prototyping AI systems.';
 // Example protocol for the build-time site URL: `https`.
 const HTTP_PROTOCOL = /^https?$/;
 
+const VERCEL_PRODUCTION_URL = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+
 const SITE_URL = z
   .url({ protocol: HTTP_PROTOCOL })
-  .parse(process.env.SITE_URL ?? 'https://example.com');
+  .parse(
+    process.env.SITE_URL ??
+      (VERCEL_PRODUCTION_URL
+        ? `https://${VERCEL_PRODUCTION_URL}`
+        : 'http://localhost:3000'),
+  );
 
 export const SITE_ORIGIN = new URL(SITE_URL).origin;
 

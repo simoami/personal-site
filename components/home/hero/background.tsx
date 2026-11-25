@@ -34,8 +34,12 @@ export function Background({ heroId, copyId }: BackgroundProps) {
           cursor: false,
           opacity: 0.6,
         });
+        if (!field.supported) {
+          field.destroy();
+          return;
+        }
+
         backgroundRef.current = field;
-        if (!field.supported) throw new Error('WebGL2 is unavailable');
         setReady(true);
       } catch (error) {
         if (active) console.error('Could not load the hero background.', error);

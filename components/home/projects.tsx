@@ -6,6 +6,7 @@ export function Projects({ projects }: { projects: Project[] }) {
     <section id='projects' aria-labelledby='projects-title'>
       <div className='section-bar'>
         <h2 id='projects-title' className='section-label'>
+          <span aria-hidden='true'>01 / </span>
           Projects
         </h2>
       </div>

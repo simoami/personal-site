@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import type { ReactNode } from 'react';
-import { ThemeToggle } from '#app/layout/ThemeToggle';
+import { ThemeToggle } from '#components/theme-toggle';
 import { SITE_DESCRIPTION, SITE_NAME, SITE_ORIGIN } from '#lib/site';
 import { THEME_INITIALIZER } from '#lib/theme';
 import './globals.css';

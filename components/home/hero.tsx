@@ -1,4 +1,4 @@
-import { Background } from '#app/page/Hero/Background';
+import { Background } from '#components/home/hero/background';
 import { SITE_NAME } from '#lib/site';
 
 const HERO_ID = 'top';

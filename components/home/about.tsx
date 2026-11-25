@@ -23,6 +23,7 @@ export function About() {
     <section id='about' aria-labelledby='about-title'>
       <div className='section-bar'>
         <h2 id='about-title' className='section-label'>
+          <span aria-hidden='true'>02 / </span>
           About
         </h2>
       </div>
