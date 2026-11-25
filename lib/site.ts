@@ -1,0 +1,27 @@
+import { z } from 'zod';
+
+export const SITE_NAME = 'Simo Moujami';
+
+export const SITE_DESCRIPTION =
+  'Senior Solutions Architect in New York. Notes on prototyping AI systems.';
+
+export const BLOG_DESCRIPTION = 'Notes on prototyping AI systems.';
+
+// Example protocol for the build-time site URL: `https`.
+const HTTP_PROTOCOL = /^https?$/;
+
+const SITE_URL = z
+  .url({ protocol: HTTP_PROTOCOL })
+  .parse(process.env.SITE_URL ?? 'https://example.com');
+
+export const SITE_ORIGIN = new URL(SITE_URL).origin;
+
+const dateFormat = new Intl.DateTimeFormat('en-US', {
+  dateStyle: 'medium',
+  timeZone: 'UTC',
+});
+
+/** Formats a post date in UTC so date-only frontmatter keeps its calendar day. */
+export function formatPostDate(date: string) {
+  return dateFormat.format(new Date(date));
+}
