@@ -1,9 +1,15 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import type { ReactNode } from 'react';
+import { PageBackground } from '#components/page-background';
+import { ThemeProvider } from '#components/theme-provider';
 import { ThemeToggle } from '#components/theme-toggle';
-import { SITE_DESCRIPTION, SITE_NAME, SITE_ORIGIN } from '#lib/site';
-import { THEME_INITIALIZER } from '#lib/theme';
+import {
+  HERO_COPY_ID,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_ORIGIN,
+} from '#lib/site';
 import './globals.css';
 
 const geist = Geist({
@@ -31,35 +37,45 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html
       lang='en'
       className={`${geist.variable} ${geistMono.variable}`}
+      // next-themes sets data-theme before hydration.
       suppressHydrationWarning
     >
-      <head>
-        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: A fixed script applies the stored theme before first paint. */}
-        <script dangerouslySetInnerHTML={{ __html: THEME_INITIALIZER }} />
-      </head>
-      <body>
-        <a className='skip-link' href='#main-content'>
-          Skip to content
-        </a>
-        <header className='site-header'>
-          <div className='frame header-inner'>
-            <a className='site-name' href='/' translate='no'>
-              {SITE_NAME}
-            </a>
-            <div className='header-controls'>
-              <nav className='primary-nav' aria-label='Primary'>
-                <a href='/#projects'>Projects</a>
-                <a href='/#about'>About</a>
-                <a href='/#writing'>Writing</a>
-              </nav>
-              <ThemeToggle />
+      <body className='bg-page font-sans text-fg antialiased'>
+        <ThemeProvider
+          attribute='data-theme'
+          defaultTheme='dark'
+          enableSystem={false}
+          disableTransitionOnChange
+        >
+          <a
+            className='fixed start-2 top-2 z-200 -translate-y-[calc(100%+12px)] bg-primary-fg p-3 text-sunken focus:translate-y-0'
+            href='#main-content'
+          >
+            Skip to content
+          </a>
+          <header className='absolute z-100 w-full'>
+            <div className='frame flex flex-wrap items-center justify-between gap-3 px-gutter py-2.5'>
+              <div className='ms-auto flex flex-wrap items-center gap-2'>
+                <nav
+                  className='flex flex-wrap items-center gap-1 text-sm text-muted *:px-1.5 *:py-3 sm:*:px-3'
+                  aria-label='Primary'
+                >
+                  <a href='/#projects'>Projects</a>
+                  <a href='/#writing'>Writing</a>
+                </nav>
+                <ThemeToggle />
+              </div>
             </div>
+          </header>
+          {/* The one translucent layer over the field: at least a screen tall, so the footer sits at the bottom of short pages. */}
+          <div className='frame flex min-h-screen flex-col border-x border-line bg-page/80'>
+            {children}
+            <footer className='px-gutter pt-7 pb-10 text-sm text-muted'>
+              <span>© 2026 Simo Moujami</span>
+            </footer>
           </div>
-        </header>
-        {children}
-        <footer className='frame ruled site-footer'>
-          <span>© 2026 Simo Moujami</span>
-        </footer>
+          <PageBackground clearId={HERO_COPY_ID} />
+        </ThemeProvider>
       </body>
     </html>
   );

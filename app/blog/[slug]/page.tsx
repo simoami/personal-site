@@ -49,14 +49,22 @@ export default async function PostPage({ params }: PostPageProps) {
   });
 
   return (
-    <main id='main-content' className='frame ruled' tabIndex={-1}>
+    <main id='main-content' className='flex-1' tabIndex={-1}>
       <article>
-        <header className='page-intro'>
-          <a className='back-link' href='/blog'>
+        <header className='grid gap-4 border-b border-line px-gutter pt-9 pb-9 wrap-anywhere sm:pt-14'>
+          <a
+            className='inline-flex min-h-11 items-center gap-2 justify-self-start font-mono text-sm underline underline-offset-[0.2em]'
+            href='/blog'
+          >
             <span aria-hidden='true'>←</span> All posts
           </a>
-          <h1>{post.title}</h1>
-          <time className='post-meta' dateTime={post.date}>
+          <h1 className='text-[28px] leading-none font-semibold tracking-[-0.05em] sm:text-[32px]'>
+            {post.title}
+          </h1>
+          <time
+            className='font-mono text-[13px]/normal text-muted tabular-nums'
+            dateTime={post.date}
+          >
             {formatPostDate(post.date)}
           </time>
         </header>

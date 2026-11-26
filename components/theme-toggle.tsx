@@ -1,34 +1,25 @@
 'use client';
 
-import { THEME_STORAGE_KEY } from '#lib/theme';
+import { useTheme } from 'next-themes';
 
-/** Switches the system or chosen color scheme and remembers the visitor's selection. */
+/** Switches between the dark default and the light override. */
 export function ThemeToggle() {
-  function handleToggleTheme() {
-    const root = document.documentElement;
-    const dark =
-      root.dataset.theme === 'dark' ||
-      (root.dataset.theme !== 'light' &&
-        matchMedia('(prefers-color-scheme: dark)').matches);
-    const theme = dark ? 'light' : 'dark';
-    root.dataset.theme = theme;
+  const { resolvedTheme, setTheme } = useTheme();
 
-    try {
-      localStorage.setItem(THEME_STORAGE_KEY, theme);
-    } catch {
-      // The active page still uses the chosen theme when storage is unavailable.
-    }
+  function handleToggleTheme() {
+    setTheme(resolvedTheme === 'light' ? 'dark' : 'light');
   }
 
   return (
     <button
-      className='theme-toggle'
+      className='grid size-11 flex-none cursor-pointer place-items-center rounded-full border border-line bg-surface hover:border-link-hover hover:text-link-hover'
       type='button'
       onClick={handleToggleTheme}
       aria-label='Switch color theme'
     >
+      {/* CSS picks the icon, so the server render matches whichever theme loads. */}
       <svg
-        className='theme-sun'
+        className='light:hidden'
         aria-hidden='true'
         width='18'
         height='18'
@@ -42,7 +33,7 @@ export function ThemeToggle() {
         <path d='M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4' />
       </svg>
       <svg
-        className='theme-moon'
+        className='hidden light:block'
         aria-hidden='true'
         width='18'
         height='18'

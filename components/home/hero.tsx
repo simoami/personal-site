@@ -1,45 +1,59 @@
-import { Background } from '#components/home/hero/background';
-import { SITE_NAME } from '#lib/site';
-
-const HERO_ID = 'top';
-
-const COPY_ID = 'hero-copy';
+import { Headshot } from '#components/home/hero/headshot';
+import { HERO_COPY_ID, SITE_NAME } from '#lib/site';
 
 const EMAIL_HREF = 'mailto:hello@example.com';
 
-/** Displays the introduction and contact links over the decorative hero field. */
+const LINK =
+  'inline-flex min-h-11 items-center gap-2 underline underline-offset-[0.2em]';
+
+/** Displays the introduction, portrait and contact links over the page field. */
 export function Hero() {
   return (
-    <section id={HERO_ID} className='hero' aria-labelledby='hero-title'>
-      <div className='frame ruled hero-inner'>
-        <div id={COPY_ID} className='hero-copy'>
-          <p className='section-label'>Senior Solutions Architect · New York</p>
-          <h1 id='hero-title' translate='no'>
+    <section
+      id='top'
+      className='border-b border-line px-gutter pt-8 pb-6 sm:pt-14 bg-surface/40'
+      aria-labelledby='hero-title'
+    >
+      <div
+        id={HERO_COPY_ID}
+        className='flex flex-col-reverse gap-5 sm:flex-row sm:items-center sm:justify-between sm:gap-10'
+      >
+        <div className='grid max-w-[720px] gap-3'>
+          <h1
+            id='hero-title'
+            className='text-[28px] leading-none font-semibold tracking-[-0.05em] sm:text-[32px]'
+            translate='no'
+          >
             {SITE_NAME}
           </h1>
-          <p className='hero-intro'>
+          <p className='font-mono text-xs tracking-[0.08em] text-muted uppercase'>
+            Solutions Architect · New York
+          </p>
+          <p className='mt-5 max-w-[58ch] text-lg/[1.6] text-soft'>
             I turn business problems into system designs. Lately my focus is
             applied AI: working out where it fits, then prototyping working AI
             workloads that prove feasibility before anyone commits to a roadmap.
           </p>
-          <ul className='hero-links'>
+          <ul className='flex flex-wrap items-center gap-x-5 font-mono text-sm'>
             <li>
-              <a href='https://github.com/simoami'>
+              <a className={LINK} href='https://github.com/simoami'>
                 GitHub <span aria-hidden='true'>↗</span>
               </a>
             </li>
             <li>
-              <a href='https://www.linkedin.com/in/simoami'>
+              <a className={LINK} href='https://www.linkedin.com/in/simoami'>
                 LinkedIn <span aria-hidden='true'>↗</span>
               </a>
             </li>
             <li>
-              <a href={EMAIL_HREF}>Email</a>
+              <a className={LINK} href={EMAIL_HREF}>
+                Email
+              </a>
             </li>
           </ul>
         </div>
+        <Headshot className='size-24 sm:size-[152px]' />
       </div>
-      <Background heroId={HERO_ID} copyId={COPY_ID} />
     </section>
   );
 }

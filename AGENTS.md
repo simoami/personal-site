@@ -17,6 +17,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Use `UPPER_SNAKE_CASE` for module-level primitive and regex constants. Leave a blank line between top-level declarations and between unrelated blocks.
 - Use `package.json` subpath imports (`#...`) across directories. Verify resolution in Turbopack, `tsc` and the Node test runner. Report resolver limitations. Avoid parent-relative imports and TypeScript `paths`.
 - Give exported functions and components a one- to three-line JSDoc describing their purpose or guarantees. Omit `@param` and `@returns`. Explain why in comments. For non-trivial helpers, document the input shape and include a one-line example for each regex.
+- Style with Tailwind v4 utilities through `@tailwindcss/postcss`. Use the semantic colors in `app/globals.css` (`bg-surface`, `text-muted`, `border-line`, `text-accent`), `px-gutter` and the `frame` utility, and `sm:`/`md:` variants for responsive changes. Dark is the default, and the `light:` variant targets the light override. Keep element selectors only for MDX output in `.post-body`.
 - Validate boundary data with a schema. Invalid frontmatter must fail the build with the filename and field.
 - Handle failures explicitly. The decorative hero background skips browsers without WebGL2. Report import or mount failures once with `console.error`, the sole allowed `console` use.
 - Describe current behavior in code, comments and docs. Keep docs short and factual, with sentence-case headings and no emoji.

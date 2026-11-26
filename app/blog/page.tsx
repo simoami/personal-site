@@ -17,10 +17,12 @@ export default async function Blog() {
   const posts = await getPosts({ includeDrafts: true });
 
   return (
-    <main id='main-content' className='frame ruled' tabIndex={-1}>
-      <header className='page-intro'>
-        <h1>Writing</h1>
-        <p>{BLOG_DESCRIPTION}</p>
+    <main id='main-content' className='flex-1' tabIndex={-1}>
+      <header className='grid gap-4 border-b border-line px-gutter pt-9 pb-9 wrap-anywhere sm:pt-14'>
+        <h1 className='text-[28px] leading-none font-semibold tracking-[-0.05em] sm:text-[32px]'>
+          Writing
+        </h1>
+        <p className='text-lg text-soft'>{BLOG_DESCRIPTION}</p>
       </header>
       <PostList posts={posts} />
     </main>

@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import { About } from '#components/home/about';
 import { Hero } from '#components/home/hero';
 import { Projects } from '#components/home/projects';
 import { PostList } from '#components/post-list';
+import { SectionBar } from '#components/section-bar';
 import { getPosts, getProjects } from '#lib/content';
 import { SITE_DESCRIPTION } from '#lib/site';
 
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   alternates: { canonical: '/', types: { 'application/rss+xml': '/feed.xml' } },
 };
 
-/** Renders the personal site with its project, About and writing sections. */
+/** Renders the personal site with its project and writing sections. */
 export default async function Home() {
   const [projects, posts] = await Promise.all([
     getProjects(),
@@ -19,24 +19,28 @@ export default async function Home() {
   ]);
 
   return (
-    <main id='main-content' tabIndex={-1}>
+    <main id='main-content' className='flex-1' tabIndex={-1}>
       <Hero />
-      <div className='frame ruled'>
-        <Projects projects={projects} />
-        <About />
-        <section id='writing' aria-labelledby='writing-title'>
-          <div className='section-bar'>
-            <h2 id='writing-title' className='section-label'>
-              <span aria-hidden='true'>03 / </span>
-              Writing
-            </h2>
-            <a href='/blog'>
-              All posts <span aria-hidden='true'>→</span>
-            </a>
-          </div>
-          <PostList posts={posts} />
-        </section>
-      </div>
+      <Projects projects={projects} />
+      <section id='writing' aria-labelledby='writing-title'>
+        <SectionBar
+          headingId='writing-title'
+          number='02'
+          title='Writing'
+          action={
+            <div>
+              <a
+                className='inline-flex min-h-11 items-center gap-2 font-mono text-xs tracking-[0.08em] uppercase underline underline-offset-[0.2em] me-2'
+                href='/blog'
+              >
+                All posts
+              </a>
+              <span aria-hidden='true'>→</span>
+            </div>
+          }
+        />
+        <PostList posts={posts} />
+      </section>
     </main>
   );
 }

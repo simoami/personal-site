@@ -2,6 +2,9 @@ import { z } from 'zod';
 
 export const SITE_NAME = 'Simo Moujami';
 
+/** The home intro block the page field fades out around. */
+export const HERO_COPY_ID = 'hero-copy';
+
 export const SITE_DESCRIPTION =
   'Senior Solutions Architect in New York. Notes on prototyping AI systems.';
 
