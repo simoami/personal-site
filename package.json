@@ -14,7 +14,7 @@
     "start": "next start",
     "lint": "biome check",
     "format": "biome format --write",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "test": "node --test tests/*.test.ts"
   },
   "dependencies": {
