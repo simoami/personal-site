@@ -139,6 +139,29 @@
     padding: 16px;
   }
 
+  /* Wide tables scroll inside the column instead of widening the page. */
+  .post-body table {
+    display: block;
+    overflow-x: auto;
+    border-collapse: collapse;
+    overflow-wrap: normal;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .post-body :is(th, td) {
+    border: 1px solid var(--color-line);
+    padding: 8px 12px;
+    text-align: start;
+    vertical-align: top;
+  }
+
+  .post-body th {
+    background: var(--color-sunken);
+    color: var(--color-fg);
+    font-weight: 600;
+  }
+
   .hljs-keyword,
   .hljs-literal,
   .hljs-built_in {
