@@ -5,9 +5,11 @@ date: 2026-11-26
 status: published
 ---
 
-While prototyping a new platform, I chose to evaluate Inngest as a durable execution environment. The first requirement was an AI document pipeline: parse, OCR, extract, enrich. A failure four stages in had to resume at that stage instead of restarting, because every rerun paid for OCR and model calls again. Inngest delivered on that. Each stage became a step, failed steps retried on their own, and our AI framework already shipped a first-party Inngest integration. As a bonus, producers could publish domain facts like `document.uploaded` and let any number of consumers subscribe without the producer knowing who they were.
+While prototyping a new clinical research platform, I chose to evaluate Inngest as a durable execution environment. What drove it was record synchronization across tenants. A clinical institution manages its own sites and staff in its tenant. A study sponsor runs studies at some of those sites, and the sponsor's tenant has to reflect what happens there: staff rotations, site updates and patient records. At the institution, those patients are people receiving routine care. In the sponsor's tenant, the same patients are anonymized records. A change on either side had to reach the other, and no request handler could make it happen directly, because every handler ran inside a strict tenant boundary and couldn't touch another tenant's database.
 
-I quickly realized there was a critical gap, and it sat right at the start of every workflow. The service saved its rows, committed, and then called `inngest.send()`. That call is an HTTP request. When the Inngest server was unreachable, the send failed after the commit had already landed. The SDK keeps no local buffer to replay from, so the event was gone. Our call sites logged the error and carried on.
+So each cross-tenant change became an event. The tenant that made the change published a fact such as `site.updated` or `patient.updated`, and a durable workflow applied it on the other side, inside that tenant's boundary. Inngest delivered on that. Each workflow step retried on its own, a failed run resumed where it stopped, and producers didn't need to know who subscribed.
+
+I quickly realized there was a critical gap, and it sat right at the start of every workflow. The service saved its rows, committed, and then called `inngest.send()`. That call is an HTTP request. When the Inngest server was unreachable, the send failed after the commit had already landed. The SDK keeps no local buffer to replay from, so the event was gone. Our call sites logged the error and carried on, and a staff rotation recorded at the institution never reached the sponsor's study, with nothing to flag the drift.
 
 We patched it with a nightly reconcile sweep that rebuilt each consumer's data from the authoritative rows. That covered crashed consumers and the initial backfill too, but as a fix for lost events it was a stopgap: up to a day of latency, and one event carried data the producer intentionally doesn't keep, so there was nothing to rebuild it from. The real fix is an old pattern, the transactional outbox, and durable workflow platforms make it easy to forget.
 
@@ -25,7 +27,7 @@ Inside a run, the platforms handle this for you. Inngest's `step.sendEvent()` is
 
 ## The dual-write problem, with an order
 
-Take a shop. Placing an order inserts a row and should start a workflow that charges the card, reserves stock and emails a receipt. Two systems have to change: your database and the workflow engine. There's no transaction that spans both, so you pick an order and live with its failure mode.
+Tenant sync takes a while to set up, so here is the same failure in a shop. Placing an order inserts a row and should start a workflow that charges the card, reserves stock and emails a receipt. Two systems have to change: your database and the workflow engine. There's no transaction that spans both, so you pick an order and live with its failure mode.
 
 **Commit, then send.** If the send fails, the order exists but nothing ever processes it. The customer saw a confirmation, and no card is charged and no receipt arrives.
 
