@@ -1,4 +1,5 @@
 import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import type { ReactNode } from 'react';
@@ -77,6 +78,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           </div>
           <PageBackground clearId={HERO_COPY_ID} />
           <Analytics />
+          <SpeedInsights />
         </ThemeProvider>
       </body>
     </html>
