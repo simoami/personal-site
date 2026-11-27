@@ -1,5 +1,3 @@
-direction: right
-
 shape: sequence_diagram
 
 api: API handler
@@ -7,11 +5,7 @@ db: Database
 engine: Workflow engine
 
 api -> db: "1. INSERT order; COMMIT"
-db -> api: committed {style.stroke: "#0D9488"; style.font-color: "#0D9488"}
-api -> engine: "2. send(order.placed)" {style.stroke: "#E11D48"; style.font-color: "#E11D48"; style.stroke-dash: 4}
-engine -> api: "timeout / 503" {style.stroke: "#E11D48"; style.font-color: "#E11D48"}
+db -> api: committed {style: {stroke: ${teal}; font-color: ${teal}}}
+api -> engine: "2. send(order.placed)" {style: {stroke: ${red}; font-color: ${red}; stroke-dash: 4}}
+engine -> api: "timeout / 503" {style: {stroke: ${red}; font-color: ${red}}}
 api -> api: "log and return 201"
-
-lost: |md
-  The order exists. Nothing will charge, reserve or email for it.
-| {near: bottom-center}

@@ -2,25 +2,31 @@ direction: down
 
 api: API handler
 
-tx: "one database transaction" {
-  style.stroke-dash: 3
-  style.font-size: 16
+tx: "ONE DATABASE TRANSACTION" {
+  class: group
   orders: orders
   outbox: outbox
 }
 
-relay: "Relay\n(poll, send, mark sent)"
+claim: "FOR UPDATE SKIP LOCKED" {class: pill}
 
-engine: Workflow engine
+relay: "Relay\npoll, send, mark sent"
 
-charge: charge card
-reserve: reserve stock
-email: send receipt
+deliver: "send(id: outbox.id)" {class: pill-teal}
 
-api -> tx.orders: INSERT order
-api -> tx.outbox: INSERT event
-tx.outbox -> relay: "SELECT … FOR UPDATE SKIP LOCKED"
-relay -> engine: "send(id = outbox.id), retry until accepted"
-engine -> charge
-engine -> reserve
-engine -> email
+engine: "WORKFLOW ENGINE" {
+  class: group
+  run: "order.placed run"
+  charge: Charge card
+  reserve: Reserve stock
+  email: Send receipt
+  run -> charge
+  run -> reserve
+  run -> email
+}
+
+api -> tx: "INSERT order + event"
+tx.outbox -- claim
+claim -> relay
+relay -- deliver
+deliver -> engine: {style: {stroke: ${teal}}}

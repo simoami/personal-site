@@ -18,7 +18,7 @@ export function Hero() {
         id={HERO_COPY_ID}
         className='flex flex-col-reverse gap-5 sm:flex-row sm:items-center sm:justify-between sm:gap-10'
       >
-        <div className='grid max-w-[720px] gap-3'>
+        <div className='grid max-w-180 gap-3'>
           <h1
             id='hero-title'
             className='text-[28px] leading-none font-semibold tracking-[-0.05em] sm:text-[32px]'
@@ -52,7 +52,7 @@ export function Hero() {
             </li>
           </ul>
         </div>
-        <Headshot className='size-24 sm:size-[152px]' />
+        <Headshot className='size-24 sm:size-38' />
       </div>
     </section>
   );

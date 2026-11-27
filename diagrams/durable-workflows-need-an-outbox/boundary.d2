@@ -1,26 +1,16 @@
 direction: right
 
-service: |md
-  **Your service**
-
-  write rows, COMMIT
-
-  *durable in your database*
-|
-
-engine: |md
-  **Workflow engine**
-
-  steps, retries, sendEvent
-
-  *durable in the engine*
-|
-
-service -> engine: "send() / start()\nprotected by neither" {
-  style.stroke: "#E11D48"
-  style.font-color: "#E11D48"
-  style.stroke-dash: 4
+service: "YOUR SERVICE" {
+  class: group
+  commit: "Write rows\nand COMMIT"
 }
 
-service.shape: rectangle
-engine.shape: rectangle
+hop: "send() / start()" {class: pill-red}
+
+engine: "WORKFLOW ENGINE" {
+  class: group
+  run: "Steps, retries\nstep.sendEvent()"
+}
+
+service.commit -- hop: {style: {stroke: ${red}; stroke-dash: 4}}
+hop -> engine.run: {style: {stroke: ${red}; stroke-dash: 4}}

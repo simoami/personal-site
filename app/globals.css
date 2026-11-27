@@ -91,7 +91,7 @@
 @layer components {
   .post-body {
     max-width: min(76ch, 100%);
-    padding: 28px var(--spacing-gutter) 48px;
+    padding: --spacing(7) var(--spacing-gutter) --spacing(12);
     color: var(--color-soft);
     font-size: 17px;
     line-height: 1.65;
@@ -136,7 +136,7 @@
     overflow-x: auto;
     border: 1px solid var(--color-line);
     background: var(--color-sunken);
-    padding: 16px;
+    padding: --spacing(4);
   }
 
   /* Wide tables scroll inside the column instead of widening the page. */
@@ -151,7 +151,7 @@
 
   .post-body :is(th, td) {
     border: 1px solid var(--color-line);
-    padding: 8px 12px;
+    padding: --spacing(2) --spacing(3);
     text-align: start;
     vertical-align: top;
   }

@@ -38,6 +38,7 @@
     "@types/node": "^26.6.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "geist": "1.5.1",
     "tailwindcss": "4.3.3",
     "typescript": "^5"
   },
