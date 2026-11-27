@@ -1,0 +1,145 @@
+---
+title: Durable workflows still need an outbox
+description: Durable execution protects a run once it starts. Getting the event there is still your job, and the transactional outbox is how you do it.
+date: 2026-11-26
+status: published
+---
+
+While prototyping a clinical research platform, I chose to evaluate Inngest as a durable execution environment. The driver was record sync across tenants. A clinical institution manages its own sites and staff, and a sponsor running studies at some of those sites needs staff rotations, site updates and patient records to follow, with each patient anonymized on the sponsor's side. Changes flow both ways, and no request handler can make them directly, because each one runs inside a strict tenant boundary and can't touch another tenant's database.
+
+So each cross-tenant change became an event, such as `site.updated`, and a durable workflow applied it inside the other tenant's boundary. Inngest handled that well. Steps retried on their own, failed runs resumed where they stopped, and producers didn't need to know who subscribed.
+
+I quickly realized there was a critical gap at the start of every workflow. The service committed its rows, then called `inngest.send()` over HTTP. When the Inngest server was unreachable, the send failed after the commit had landed, and with no local buffer in the SDK, the event was gone. A staff rotation recorded at the institution never reached the sponsor's study, and nothing flagged the drift.
+
+A nightly reconcile sweep that rebuilt consumer data from the authoritative rows patched it, with up to a day of latency, and it couldn't recover one event whose data the producer intentionally doesn't keep. The real fix is an old pattern, the transactional outbox, and durable workflow platforms make it easy to forget.
+
+## Durable execution starts one hop too late
+
+An engine checkpoints a run's progress, so a failed step resumes where it left off. That guarantee starts when the engine accepts the event. The moment before it, when your service decides a workflow should run, is still your code, in a different system.
+
+<Diagram
+  src='/images/posts/durable-workflows-need-an-outbox/boundary'
+  alt='Your service writes rows and commits, durable in your database. The workflow engine runs steps and retries, durable in the engine. The send or start call between them is protected by neither.'
+  caption='Each side is durable on its own. The hop between them is not.'
+/>
+
+Inside a run, the platforms cover this. Inngest records `step.sendEvent()` as a step, so a replay doesn't send twice. The unprotected hop is the first one, from your request handler into the engine.
+
+## The dual-write problem, with an order
+
+Cross-tenant sync takes a while to set up, so here is the same failure in a shop. Placing an order inserts a row and starts a workflow that charges the card, reserves stock and emails a receipt. No transaction spans your database and the engine, so every ordering of the two writes has a failure mode.
+
+**Commit, then send.** If the send fails, the order exists and nothing processes it.
+
+<Diagram
+  src='/images/posts/durable-workflows-need-an-outbox/dual-write'
+  alt='Sequence diagram. The API handler inserts the order and commits. Sending order.placed to the workflow engine times out. The handler logs the error and returns 201, so the order exists but nothing processes it.'
+  caption='Commit, then send: the event is lost and the order sits unprocessed.'
+/>
+
+**Send, then commit.** If the commit fails, a workflow charges a card for an order that rolled back.
+
+**Send inside the transaction.** Inserting, sending, and committing only once the engine acknowledges looks safer, since a failed send rolls the insert back. It's still a dual write. The commit can fail after the engine accepted the event, from a serialization error, a deferred constraint or a dropped connection, and a workflow runs for an order that doesn't exist. A timeout is ambiguous too, because the engine may have accepted the event before the response was lost. Meanwhile the transaction holds its locks and a pooled connection for the length of a network call, so a slow engine slows your database.
+
+Retrying in the handler narrows these windows without closing them, and a crash or a deploy can land in any of them.
+
+## The transactional outbox
+
+Write to one system in the request instead of two. In the same transaction as the order, insert a row describing the event into an `outbox` table. Both rows commit or neither does. A separate relay reads unsent rows, delivers them to the engine, and marks them sent.
+
+<Diagram
+  src='/images/posts/durable-workflows-need-an-outbox/outbox'
+  alt='The API handler inserts the order and the event into the orders and outbox tables in one database transaction. A relay selects unsent rows with FOR UPDATE SKIP LOCKED and sends each with its outbox id. The workflow engine then charges the card, reserves stock and sends the receipt.'
+  caption='The request writes to one system. The relay owns the hop to the engine.'
+/>
+
+```sql
+CREATE TABLE outbox (
+  id         uuid PRIMARY KEY,
+  name       text NOT NULL,
+  payload    jsonb NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  sent_at    timestamptz
+);
+
+-- Keeps the relay's query cheap no matter how many sent rows remain.
+CREATE INDEX outbox_unsent ON outbox (created_at) WHERE sent_at IS NULL;
+```
+
+Writing the event is one more insert in the transaction you already have:
+
+```ts
+await sql.begin(async (tx) => {
+  const [order] = await tx`INSERT INTO orders ${tx(input)} RETURNING id, total`;
+
+  await tx`
+    INSERT INTO outbox (id, name, payload)
+    VALUES (${randomUUID()}, 'shop/order.placed', ${tx.json({ orderId: order.id, total: order.total })})`;
+});
+```
+
+The relay claims a batch with `FOR UPDATE SKIP LOCKED`, so several instances can run without picking up the same rows:
+
+```ts
+async function drainOutbox() {
+  await sql.begin(async (tx) => {
+    const rows = await tx`
+      SELECT id, name, payload FROM outbox
+      WHERE sent_at IS NULL
+      ORDER BY created_at
+      LIMIT 100
+      FOR UPDATE SKIP LOCKED`;
+    if (rows.length === 0) return;
+
+    // The outbox id doubles as the event id, so a resend is recognised as a duplicate.
+    await inngest.send(rows.map((row) => ({ id: row.id, name: row.name, data: row.payload })));
+
+    await tx`UPDATE outbox SET sent_at = now() WHERE id IN ${tx(rows.map((row) => row.id))}`;
+  });
+}
+```
+
+The relay also sends inside a transaction, but its failures are safe. The rows it sends are already committed, so a failed commit after a successful send only means the batch goes out again, and the engine drops it as a duplicate. If the send throws, the claim rolls back and the next tick retries. Keep batches small, since the claim holds its locks while the request is in flight.
+
+## What you sign up for
+
+**At-least-once delivery.** A relay crash between the engine's acceptance and the `UPDATE` resends the batch. Use the outbox id as the event's idempotency key. Inngest ignores an `id` it has seen in the last 24 hours, so alert well before a stuck row outlives that window.
+
+**Idempotent consumers.** Deduplication covers the start of a run, not its side effects. Steps retry, so charges and emails need their own idempotency keys, and database writes should be upserts or guarded by unique constraints.
+
+**Fat events.** Put everything a consumer needs in the payload and validate it on read. A consumer that reads the producer's tables to fill gaps couples the services again.
+
+**Latency and housekeeping.** Polling adds up to one interval of delay, which `LISTEN/NOTIFY` or change data capture can remove. Delete sent rows on a schedule, and alert on the age of the oldest unsent row.
+
+**Keep the sweep.** A reconcile job still catches consumer bugs and handles backfills. It stops being the only thing between you and data loss.
+
+If the workflow can own the write, you can skip the outbox. Start it with a deterministic id derived from the request and do the insert as its first step. The cost is that your request path depends on the engine being up, and returning the new row to the caller gets harder.
+
+## Which platforms need one
+
+Each platform below makes runs durable once they start and can deduplicate the start, but none can join your database transaction. Each needs an outbox, or the workflow-first approach, wherever a write and a start must agree.
+
+| Platform | How a run starts | Deduplication | Outbox |
+| --- | --- | --- | --- |
+| **Inngest** | `inngest.send()`, an HTTP call to the Inngest server | Event `id`, for 24 hours | Needed at the edge. `step.sendEvent()` inside a function is durable. |
+| **Temporal** | An RPC to the Temporal cluster | One open run per workflow ID, with a reuse policy | Needed, unless the workflow owns the write |
+| **Trigger.dev** | `tasks.trigger()`, an API call | `idempotencyKey`, with a scope and a TTL | Needed |
+| **Vercel Workflow** | `start()`, enqueued on Vercel's infrastructure | Atomic start keyed by your own token, in recent SDKs | Needed |
+
+Systems that keep their state in your database don't need one:
+
+- **DBOS** stores workflow state in your Postgres and can enqueue a workflow in the same transaction as your writes.
+- **pg-boss** and **Graphile Worker** insert a job row, so a job added inside your transaction is the outbox. pg-boss accepts your transaction's executor, and Graphile Worker exposes `add_job()` as a SQL function.
+
+That only holds when the queue's tables share a database with your data. Self-hosting Inngest or Temporal on the same Postgres server doesn't count, because their writes run in their own transactions.
+
+If you run Inngest, Temporal, Trigger.dev or Vercel Workflow, find every place a request commits and then sends an event or starts a run. Each one needs an outbox, a workflow that owns the write, or a sweep that can rebuild what the lost event would have done.
+
+### Further reading
+
+- [Inngest: sending events and deduplication](https://www.inngest.com/docs/events)
+- [Trigger.dev: idempotency](https://trigger.dev/docs/idempotency)
+- [Vercel: atomic start hooks in the Workflow SDK](https://vercel.com/changelog/atomic-start-hooks-in-the-workflow-sdk)
+- [Temporal community: starting a workflow in a transaction](https://community.temporal.io/t/what-is-recommended-approach-on-starting-workflow-in-transaction/16248)
+- [DBOS: co-locating workflow state with your data](https://www.dbos.dev/blog/co-locating-workflow-state-with-your-data)
+- [AWS Prescriptive Guidance: transactional outbox pattern](https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html)

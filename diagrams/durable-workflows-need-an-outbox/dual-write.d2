@@ -1,0 +1,11 @@
+shape: sequence_diagram
+
+api: API handler
+db: Database
+engine: Workflow engine
+
+api -> db: "1. INSERT order; COMMIT"
+db -> api: committed {style: {stroke: ${teal}; font-color: ${teal}}}
+api -> engine: "2. send(order.placed)" {style: {stroke: ${red}; font-color: ${red}; stroke-dash: 4}}
+engine -> api: "timeout / 503" {style: {stroke: ${red}; font-color: ${red}}}
+api -> api: "log and return 201"

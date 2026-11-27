@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { compileMDX } from 'next-mdx-remote/rsc';
 import rehypeHighlight from 'rehype-highlight';
+import remarkGfm from 'remark-gfm';
+import { Diagram } from '#components/diagram';
 import { getPosts } from '#lib/content';
 import { formatPostDate } from '#lib/site';
 
@@ -45,7 +47,14 @@ export default async function PostPage({ params }: PostPageProps) {
   const post = await requirePublishedPost(params);
   const { content } = await compileMDX({
     source: { value: post.body, path: `content/posts/${post.slug}.mdx` },
-    options: { mdxOptions: { rehypePlugins: [rehypeHighlight] } },
+    components: { Diagram },
+    options: {
+      mdxOptions: {
+        // GitHub-flavored Markdown adds tables.
+        remarkPlugins: [remarkGfm],
+        rehypePlugins: [rehypeHighlight],
+      },
+    },
   });
 
   return (

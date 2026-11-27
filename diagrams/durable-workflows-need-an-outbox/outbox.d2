@@ -1,0 +1,32 @@
+direction: down
+
+api: API handler
+
+tx: "ONE DATABASE TRANSACTION" {
+  class: group
+  orders: orders
+  outbox: outbox
+}
+
+claim: "FOR UPDATE SKIP LOCKED" {class: pill}
+
+relay: "Relay\npoll, send, mark sent"
+
+deliver: "send(id: outbox.id)" {class: pill-teal}
+
+engine: "WORKFLOW ENGINE" {
+  class: group
+  run: "order.placed run"
+  charge: Charge card
+  reserve: Reserve stock
+  email: Send receipt
+  run -> charge
+  run -> reserve
+  run -> email
+}
+
+api -> tx: "INSERT order + event"
+tx.outbox -- claim
+claim -> relay
+relay -- deliver
+deliver -> engine: {style: {stroke: ${teal}}}

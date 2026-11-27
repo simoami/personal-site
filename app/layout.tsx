@@ -50,7 +50,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           disableTransitionOnChange
         >
           <a
-            className='fixed start-2 top-2 z-200 -translate-y-[calc(100%+12px)] bg-primary-fg p-3 text-sunken focus:translate-y-0'
+            className='fixed start-2 top-2 z-200 -translate-y-[calc(100%+var(--spacing)*3)] bg-primary-fg p-3 text-sunken focus:translate-y-0'
             href='#main-content'
           >
             Skip to content

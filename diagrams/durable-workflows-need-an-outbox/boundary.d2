@@ -1,0 +1,16 @@
+direction: right
+
+service: "YOUR SERVICE" {
+  class: group
+  commit: "Write rows\nand COMMIT"
+}
+
+hop: "send() / start()" {class: pill-red}
+
+engine: "WORKFLOW ENGINE" {
+  class: group
+  run: "Steps, retries\nstep.sendEvent()"
+}
+
+service.commit -- hop: {style: {stroke: ${red}; stroke-dash: 4}}
+hop -> engine.run: {style: {stroke: ${red}; stroke-dash: 4}}
