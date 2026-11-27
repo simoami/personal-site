@@ -1,0 +1,26 @@
+direction: right
+
+service: |md
+  **Your service**
+
+  write rows, COMMIT
+
+  *durable in your database*
+|
+
+engine: |md
+  **Workflow engine**
+
+  steps, retries, sendEvent
+
+  *durable in the engine*
+|
+
+service -> engine: "send() / start()\nprotected by neither" {
+  style.stroke: "#E11D48"
+  style.font-color: "#E11D48"
+  style.stroke-dash: 4
+}
+
+service.shape: rectangle
+engine.shape: rectangle

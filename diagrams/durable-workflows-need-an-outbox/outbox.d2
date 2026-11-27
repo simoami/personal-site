@@ -1,0 +1,26 @@
+direction: down
+
+api: API handler
+
+tx: "one database transaction" {
+  style.stroke-dash: 3
+  style.font-size: 16
+  orders: orders
+  outbox: outbox
+}
+
+relay: "Relay\n(poll, send, mark sent)"
+
+engine: Workflow engine
+
+charge: charge card
+reserve: reserve stock
+email: send receipt
+
+api -> tx.orders: INSERT order
+api -> tx.outbox: INSERT event
+tx.outbox -> relay: "SELECT … FOR UPDATE SKIP LOCKED"
+relay -> engine: "send(id = outbox.id), retry until accepted"
+engine -> charge
+engine -> reserve
+engine -> email
