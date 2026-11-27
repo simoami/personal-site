@@ -9,7 +9,7 @@ async function createEntries(
   context: TestContext,
   entries: Record<string, string>,
 ) {
-  const directory = await mkdtemp(join(tmpdir(), 'simo-site-content-'));
+  const directory = await mkdtemp(join(tmpdir(), 'personal-site-content-'));
   context.after(() => rm(directory, { recursive: true }));
   await Promise.all(
     Object.entries(entries).map(([name, source]) =>
